@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
         }
       }
       if (message[2] == 0) {
-        if (message[0] > 143) {
+        if ((144 <= message[0]) && (message[0] < 160)){
           message[0] = message[0] - 16;
         }
       }

@@ -102,6 +102,9 @@ StatusByteType utils::status_byte_type(
         return unknown;
       }
     }
+    else if ((224 <= byte) && (byte < 240)) {
+        return bending;
+    }
     else {
       return unknown;
     }
@@ -124,6 +127,9 @@ int utils::channel(std::vector< unsigned char > message) {
   }
   else if (type == pedal_released) {
     return message[0] - 176;
+  }
+  else if (type == bending) {
+    return message[0] - 224;
   }
   else {
     return 0;

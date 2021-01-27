@@ -12,6 +12,7 @@ class Voice {
     std::vector< int > zOutPressed{};
     std::vector< int > zOutPlaying{};
     std::vector< int > zOffSince{};
+    int zIndex = 0;
   public:
     Voice();
     ~Voice();

@@ -13,7 +13,8 @@ const float cFloatDelta = 0.0000000001; // For testing equality of floats.
 enum StatusByteType {
   unknown,
   note_on, note_off,
-  pedal_pressed, pedal_released
+  pedal_pressed, pedal_released,
+  bending
 };
 
 #endif
