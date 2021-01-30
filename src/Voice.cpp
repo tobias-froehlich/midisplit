@@ -13,6 +13,26 @@ Voice::~Voice() {
 
 }
 
+
+void Voice::set_mode(std::string mode) {
+  if (mode.compare("piano") == 0) {
+      std::cout << "piano\n";
+      zMode = piano;
+  }
+  else if (mode.compare("piano_bending") == 0) {
+      std::cout << "piano_bending\n";
+      zMode = piano_bending;
+  }
+  else if (mode.compare("legato_bending") == 0) {
+      std::cout << "legato_bending\n";
+      zMode = legato_bending;
+  }
+  else {
+    std::cout << "Warning: No valid mode!\n";
+  }
+}
+
+
 void Voice::set_in_channels(
  std::vector< std::string > channels) {
   zInChannels.clear();
@@ -53,8 +73,22 @@ int Voice::index_longest_off() {
   return index;
 }
 
-/*
 void Voice::push(
+  std::vector< unsigned char > message) {
+  switch ( zMode ) {
+    case piano:
+      push_piano(message);
+      break;
+    case piano_bending:
+      push_piano_bending(message);
+      break;
+    case legato_bending:
+      push_legato_bending(message);
+      break;
+  }
+}
+
+void Voice::push_piano(
  std::vector< unsigned char > message) {
   int channel = utils::channel(message);
   for (int order : zOffSince) {
@@ -69,7 +103,7 @@ void Voice::push(
         zMidiCode[zIndex] = message[1];
         zOutPressed[zIndex] = 1;
         zOutPlaying[zIndex] = 1;
-        zOffSince[zIndex] = 0;
+        zOffSince[zIndex] = -1;
         message[0] = 144 + zOutChannels[zIndex];
         zMessages.push_back(message);
       }
@@ -83,7 +117,9 @@ void Voice::push(
               message[0] = 128 + zOutChannels[i];
               zMessages.push_back(message);
               for(unsigned int j=0; j<zOffSince.size(); j++) {
-                zOffSince[j] = zOffSince[j] + 1;
+                if (zOutPlaying[j] == 0) {
+                  zOffSince[j] = zOffSince[j] + 1;
+                }
               }
             }
           }
@@ -113,9 +149,9 @@ void Voice::push(
     }
   }
 }
-*/
 
-void Voice::push(
+
+void Voice::push_piano_bending(
  std::vector< unsigned char > message) {
   int channel = utils::channel(message);
   for (int order : zOffSince) {
@@ -127,14 +163,14 @@ void Voice::push(
       StatusByteType type = utils::status_byte_type(message);
       if ( type == bending ) {
           zIndex = index_longest_off();
-          message[0] = 244 + zOutChannels[zIndex];
+          message[0] = 224 + zOutChannels[zIndex];
           zMessages.push_back(message);
       }
       if ( type == note_on ) {
         zMidiCode[zIndex] = message[1];
         zOutPressed[zIndex] = 1;
         zOutPlaying[zIndex] = 1;
-        zOffSince[zIndex] = 0;
+        zOffSince[zIndex] = -1;
         message[0] = 144 + zOutChannels[zIndex];
         zMessages.push_back(message);
       }
@@ -148,7 +184,9 @@ void Voice::push(
               message[0] = 128 + zOutChannels[i];
               zMessages.push_back(message);
               for(unsigned int j=0; j<zOffSince.size(); j++) {
-                zOffSince[j] = zOffSince[j] + 1;
+                if (zOutPlaying[j] == 0) {
+                  zOffSince[j] = zOffSince[j] + 1;
+                }
               }
             }
           }
@@ -174,6 +212,41 @@ void Voice::push(
             }
           }
         }
+      }
+    }
+  }
+}
+
+
+void Voice::push_legato_bending(
+ std::vector< unsigned char > message) {
+  int channel = utils::channel(message);
+  for (int order : zOffSince) {
+    std::cout << order << " ";
+  }
+  std::cout << "\n";
+  for (int inchannel : zInChannels) {
+    if (inchannel == channel) {
+      StatusByteType type = utils::status_byte_type(message);
+      if ( type == bending ) {
+        if (zNumberOfNotesPlaying == 0) {
+            zIndex += 1;
+            zIndex = zIndex % zMidiCode.size();
+        }
+        
+        message[0] = 224 + zOutChannels[zIndex];
+        zMessages.push_back(message);
+      }
+      if ( type == note_on ) {
+        zNumberOfNotesPlaying += 1;
+        zMidiCode[zIndex] = message[1];
+        message[0] = 144 + zOutChannels[zIndex];
+        zMessages.push_back(message);
+      }
+      if ( type == note_off ) {
+            zNumberOfNotesPlaying -= 1;
+            message[0] = 128 + zOutChannels[zIndex];
+            zMessages.push_back(message);
       }
     }
   }

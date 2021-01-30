@@ -17,4 +17,8 @@ enum StatusByteType {
   bending
 };
 
+enum Mode {
+  piano, piano_bending, legato_bending
+};
+
 #endif

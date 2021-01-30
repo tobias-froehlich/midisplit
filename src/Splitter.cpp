@@ -23,6 +23,7 @@ void Splitter::read_parameter_file(
   
   std::string par_inchannel = "input_channels_1";
   std::string par_outchannel = "output_channels_1";
+  std::string par_mode = "mode_1";
 
   zVoices.clear();
 
@@ -37,11 +38,16 @@ void Splitter::read_parameter_file(
     zVoices.back().set_out_channels(
       parameters->get_values(par_outchannel)
     );
+    if (parameters->name_occurs(par_mode)) {
+      zVoices.back().set_mode(
+        parameters->get_values(par_mode)[0]
+      );
+    }
     par_inchannel =
      utils::inc_ending_number(par_inchannel);
     par_outchannel = 
      utils::inc_ending_number(par_outchannel);
-
+    par_mode = utils::inc_ending_number(par_mode);
   }
 
   delete parameters;
